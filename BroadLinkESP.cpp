@@ -14,9 +14,16 @@ BroadLinkESP::BroadLinkESP(uint16_t devtype)
   _seq=0;
   _fgot=0;
   _fready=0;
+  _ptlearn=NULL;
+  _cblearn=0;
   memset(_id,0,sizeof(_id));
   memcpy(_key,brd_key,16);
   _udp.begin(0);
+}
+
+void BroadLinkESP::setDebug(int dbg)
+{
+  _debug=dbg;
 }
 
 void BroadLinkESP::setDestIP(char *ipstr)
@@ -220,6 +227,24 @@ void BroadLinkESP::preparePacketSetPower(byte sno,byte onoff)
   preparePacketSetPowerMask(0x01<<(sno-1),onoff);
 }
 
+void BroadLinkESP::preparePacketEnterLearn(void)
+{
+  byte packet[16];
+  memset(packet,0,sizeof(packet));
+  packet[0x00] = 3;
+  preparePacket(0x6A,packet,16);
+  _typepacket=3;
+}
+
+void BroadLinkESP::preparePacketCheckData(void)
+{
+  byte packet[16];
+  memset(packet,0,sizeof(packet));
+  packet[0x00] = 4;
+  preparePacket(0x6A,packet,16);
+  _typepacket=4;
+}
+
 void BroadLinkESP::sendPacket(void)
 {
   if(_debug)
@@ -276,7 +301,7 @@ int BroadLinkESP::readPacket(int packetSize)
     Serial.println(_udp.remotePort());
   }
 
-  byte rbuf[128];
+  byte rbuf[512];
   int rval;
   uint16_t ui2;
   if(packetSize>sizeof(rbuf))
@@ -284,6 +309,7 @@ int BroadLinkESP::readPacket(int packetSize)
   rval=_udp.read(rbuf,packetSize);
   if(_debug)
   {
+    Serial.printf("UDPREAD(%d,%d):\n",rval,_fwaitresp);
     for(int i=0;i<rval;i++)
     {
       if(i && ((i % 16)==0))
@@ -321,6 +347,32 @@ int BroadLinkESP::readPacket(int packetSize)
     }
     else if(_fwaitresp==2)
     {
+    }
+    else if(_fwaitresp==3)
+    {
+    }
+    else if(_fwaitresp==4)
+    {
+      if(ui2==0)
+      {
+        decryptData(rbuf+0x38,(rval-0x38));
+        if(_debug)
+          Serial.printf("GOT DATA %d bytes\n",rval-0x38);
+	if(rval>72)
+	{
+	  _fgot=2;
+	  if(_ptlearn)
+	  {
+ 	    free(_ptlearn); _ptlearn=NULL;
+	  }
+	  _cblearn=rval-0x38-4;
+	  _ptlearn=(byte *)malloc(_cblearn);
+	  if(_ptlearn)
+	  {
+	    memcpy(_ptlearn,rbuf+0x38,_cblearn);
+	  }
+	}
+      }
     }
   }
   _fwaitresp=0;

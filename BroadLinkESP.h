@@ -21,8 +21,12 @@ public:
   WiFiUDP _udp;
   int _fgot;
   int _fready;
+ 
+  byte *_ptlearn;
+  int _cblearn;
 
   BroadLinkESP(uint16_t devtype);
+  void setDebug(int dbg);
   void setDestIP(char *ipstr);
   void setDestMAC(byte *inmac);  
 
@@ -32,6 +36,8 @@ public:
   void preparePacketAuth(void);
   void preparePacketSetPowerMask(byte sid_mask,byte state);
   void preparePacketSetPower(byte sno,byte onoff);
+  void preparePacketEnterLearn(void);
+  void preparePacketCheckData(void);
   void sendPacket(void);
   int checkReadPacket(void);
   int readPacket(int packetSize);
