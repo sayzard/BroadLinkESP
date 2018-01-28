@@ -227,6 +227,19 @@ void BroadLinkESP::preparePacketSetPower(byte sno,byte onoff)
   preparePacketSetPowerMask(0x01<<(sno-1),onoff);
 }
 
+void BroadLinkESP::preparePacketSetSpPower(byte state)
+{
+  byte packet[16];
+  memset(packet,0,sizeof(packet));
+  packet[0x00] = 2;
+  if(state)
+    packet[4]=1;
+  else 
+    packet[4]=0;
+  preparePacket(0x6A,packet,16);
+  _typepacket=2;
+}
+
 void BroadLinkESP::preparePacketEnterLearn(void)
 {
   byte packet[16];

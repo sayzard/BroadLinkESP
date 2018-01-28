@@ -10,6 +10,7 @@
 
 #define BROADLINK_DEV_RMMINI 0x2737
 #define BROADLINK_DEV_MP1 0x4EB5
+#define BROADLINK_DEV_SP3S 0x947A
 
 class BroadLinkESP
 {
@@ -36,6 +37,7 @@ public:
   void preparePacketAuth(void);
   void preparePacketSetPowerMask(byte sid_mask,byte state);
   void preparePacketSetPower(byte sno,byte onoff);
+  void preparePacketSetSpPower(byte onoff);
   void preparePacketEnterLearn(void);
   void preparePacketCheckData(void);
   void sendPacket(void);
